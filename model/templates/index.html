@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drought Warning Dashboard</title>
+</head>
+<body>
+    <h2>Drought Prediction Dashboard</h2>
+
+    <form method="POST">
+        Rainfall: <input type="number" name="rainfall" required><br><br>
+        Temperature: <input type="number" name="temperature" required><br><br>
+        <button type="submit">Predict</button>
+    </form>
+
+    <h3>{{ prediction }}</h3>
+</body>
+</html>
