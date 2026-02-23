@@ -1,17 +1,203 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Drought Warning Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jal-Drishti | Integrated Drought Management</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --light: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            background-color: #f8f9fa;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            background: var(--primary);
+            color: white;
+            height: 100vh;
+            padding: 20px;
+            position: fixed;
+        }
+
+        .sidebar h2 { color: var(--accent); margin-bottom: 30px; }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 40px;
+            width: 100%;
+        }
+
+        header { margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        /* Form Inputs */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        button:hover { background: #2980b9; }
+
+        /* Results Display */
+        #result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none; /* Initially hidden */
+        }
+
+        .alert-high { background: #fdeaea; border-left: 5px solid var(--danger); color: var(--danger); }
+        .alert-low { background: #eafaf1; border-left: 5px solid var(--success); color: var(--success); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+    </style>
 </head>
 <body>
-    <h2>Drought Prediction Dashboard</h2>
 
-    <form method="POST">
-        Rainfall: <input type="number" name="rainfall" required><br><br>
-        Temperature: <input type="number" name="temperature" required><br><br>
-        <button type="submit">Predict</button>
-    </form>
+    <div class="sidebar">
+        <h2>Jal-Drishti</h2>
+        <p>Preventive Governance</p>
+        <hr>
+        <p>• Dashboard</p>
+        <p>• Tanker Logs</p>
+        <p>• NASA Power Data</p>
+    </div>
 
-    <h3>{{ prediction }}</h3>
+    <div class="main-content">
+        <header>
+            <h1>Water Stress & Tanker Allocation</h1>
+            <p>Shift from Crisis Management to Preventive Planning</p>
+        </header>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Generate Stress Index</h3>
+                <div class="input-group">
+                    <label>Rainfall Deviation (%)</label>
+                    <input type="number" id="rainfall" placeholder="e.g. -40 (below normal)">
+                </div>
+                <div class="input-group">
+                    <label>Groundwater Level Trend (0-100)</label>
+                    <input type="number" id="groundwater" placeholder="100 = Full, 0 = Dry">
+                </div>
+                <div class="input-group">
+                    <label>Village Population</label>
+                    <input type="number" id="population" placeholder="Total people">
+                </div>
+                <button onclick="calculateRisk()">Analyze Risk & Allocate</button>
+
+                <div id="result-box">
+                    <h4 id="status-title"></h4>
+                    <p id="allocation-detail"></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Live Allocation Queue</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Village</th>
+                            <th>Priority</th>
+                            <th>Tankers</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allocation-table">
+                        <tr>
+                            <td>Nagpur Central</td>
+                            <td><span style="color:var(--success)">Low</span></td>
+                            <td>0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateRisk() {
+            const rain = document.getElementById('rainfall').value;
+            const gw = document.getElementById('groundwater').value;
+            const pop = document.getElementById('population').value;
+            const resultBox = document.getElementById('result-box');
+            
+            if(!rain || !gw || !pop) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            // Calculation Logic: High stress if rain deviation is negative and groundwater is low
+            let stressScore = (Math.abs(rain) * 0.5) + ((100 - gw) * 0.5);
+            let tankersNeeded = 0;
+
+            resultBox.style.display = "block";
+
+            if (stressScore > 60) {
+                tankersNeeded = Math.ceil(pop / 1000); // 1 tanker per 1000 people
+                resultBox.className = "alert-high";
+                document.getElementById('status-title').innerText = "⚠ HIGH STRESS DETECTED";
+                document.getElementById('allocation-detail').innerText = 
+                    `Priority: High. Allocated ${tankersNeeded} tankers for preventive supply.`;
+                
+                addToList("New Area", "High", tankersNeeded);
+            } else {
+                resultBox.className = "alert-low";
+                document.getElementById('status-title').innerText = "✅ STABLE CONDITIONS";
+                document.getElementById('allocation-detail').innerText = 
+                    "No immediate tanker allocation required. Monitoring groundwater trends.";
+            }
+        }
+
+        function addToList(village, priority, tankers) {
+            const table = document.getElementById('allocation-table');
+            const row = `<tr>
+                <td>${village}</td>
+                <td><span style="color:${priority === 'High' ? 'red' : 'green'}">${priority}</span></td>
+                <td>${tankers}</td>
+            </tr>`;
+            table.innerHTML = row + table.innerHTML;
+        }
+    </script>
 </body>
 </html>
