@@ -7,661 +7,740 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="/_sdk/data_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&amp;family=Orbitron:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Poppins', sans-serif; }
-    .gradient-bg { background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%); }
-    .card-glass { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
-    .pulse-red { animation: pulse-red 2s infinite; }
-    .pulse-yellow { animation: pulse-yellow 2s infinite; }
-    @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } }
-    @keyframes pulse-yellow { 0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } }
-    .map-container { position: relative; background: linear-gradient(180deg, #e8f4e8 0%, #c8e6c9 100%); border-radius: 12px; overflow: hidden; }
-    .village-dot { position: absolute; width: 24px; height: 24px; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; transition: all 0.3s; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-    .village-dot:hover { transform: translate(-50%, -50%) scale(1.3); z-index: 10; }
-    .tooltip { position: absolute; background: #1e3a5f; color: white; padding: 8px 12px; border-radius: 8px; font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 100; }
-    .village-dot:hover + .tooltip { opacity: 1; }
-    .stat-card { transition: transform 0.3s, box-shadow 0.3s; }
-    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
-    .btn-primary { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); transition: all 0.3s; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4); }
-    .risk-high { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    * { font-family: 'Rajdhani', sans-serif; }
+    .orbitron { font-family: 'Orbitron', sans-serif; }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 5px currentColor; }
+      50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+    }
+    
+    @keyframes scan-line {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+    
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    .animate-scan { animation: scan-line 3s linear infinite; }
+    .animate-fade-in { animation: fade-in-up 0.5s ease-out forwards; }
+    
+    .risk-high { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); }
     .risk-moderate { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-    .risk-safe { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
-    .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; }
-    .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    .tanker-icon { font-size: 20px; }
-    .water-wave { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%233b82f6' fill-opacity='0.3' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") repeat-x; animation: wave 3s linear infinite; }
-    @keyframes wave { 0% { background-position-x: 0; } 100% { background-position-x: 1440px; } }
+    .risk-safe { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    
+    .glass-card {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    
+    .map-container {
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    
+    .village-dot {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .village-dot:hover {
+      transform: scale(1.5);
+      z-index: 100;
+    }
+    
+    .tanker-icon {
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
+    }
+    
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    
+    input[type="range"]::-webkit-slider-track {
+      height: 8px;
+      background: linear-gradient(90deg, #10b981, #f59e0b, #dc2626);
+      border-radius: 4px;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #38bdf8;
+      border-radius: 50%;
+      margin-top: -6px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+    }
+    
+    .scroll-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .scroll-container::-webkit-scrollbar-track {
+      background: rgba(30, 41, 59, 0.5);
+    }
+    
+    .scroll-container::-webkit-scrollbar-thumb {
+      background: #38bdf8;
+      border-radius: 3px;
+    }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
- <body class="h-full gradient-bg">
-  <div id="app" class="h-full overflow-auto"><!-- Header -->
-   <header class="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+ <body class="h-full bg-slate-900 text-white overflow-auto">
+  <div id="app" class="min-h-full w-full"><!-- Header -->
+   <header class="glass-card border-b border-cyan-500/30 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-4">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg"><span class="text-2xl">💧</span>
+     <div class="flex items-center justify-between flex-wrap gap-4">
+      <div class="flex items-center gap-4">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+        </svg>
        </div>
        <div>
-        <h1 id="main-title" class="text-xl font-bold text-white">Drought Warning System</h1>
-        <p id="district-subtitle" class="text-blue-200 text-sm">Jaipur District • Real-time Monitoring</p>
+        <h1 id="main-title" class="orbitron text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Drought Warning System</h1>
+        <p id="district-subtitle" class="text-cyan-400/70 text-sm">District Command Center</p>
        </div>
       </div>
-      <div class="flex items-center gap-4">
-       <div class="hidden md:flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2"><span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> <span class="text-white text-sm">System Active</span>
-       </div><button onclick="openAddModal()" class="btn-primary px-4 py-2 rounded-lg text-white font-medium flex items-center gap-2 shadow-lg"> <span>➕</span> <span class="hidden sm:inline">Add Village</span> </button>
+      <div class="flex items-center gap-3">
+       <div class="px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30"><span class="text-cyan-400 text-sm">🛰️ Live Monitoring</span>
+       </div>
+       <div id="current-time" class="orbitron text-cyan-400 text-sm"></div>
       </div>
      </div>
     </div>
-   </header>
-   <main class="max-w-7xl mx-auto px-4 py-6 space-y-6"><!-- Stats Overview -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-     <div class="stat-card card-glass rounded-xl p-4 shadow-lg">
-      <div class="flex items-center justify-between">
-       <div>
-        <p class="text-gray-500 text-sm">Total Villages</p>
-        <p id="stat-total" class="text-2xl font-bold text-gray-800">0</p>
+   </header><!-- Stats Overview -->
+   <section class="max-w-7xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+     <div class="glass-card rounded-xl p-4 animate-fade-in" style="animation-delay: 0.1s">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center"><span class="text-2xl">🔴</span>
        </div>
-       <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center"><span class="text-2xl">🏘️</span>
+       <div>
+        <p class="text-slate-400 text-xs uppercase tracking-wider">High Risk</p>
+        <p id="stat-high" class="orbitron text-2xl font-bold text-red-400">0</p>
        </div>
       </div>
      </div>
-     <div class="stat-card card-glass rounded-xl p-4 shadow-lg">
-      <div class="flex items-center justify-between">
-       <div>
-        <p class="text-gray-500 text-sm">High Risk</p>
-        <p id="stat-high" class="text-2xl font-bold text-red-600">0</p>
+     <div class="glass-card rounded-xl p-4 animate-fade-in" style="animation-delay: 0.2s">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center"><span class="text-2xl">🟡</span>
        </div>
-       <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center"><span class="text-2xl">🚨</span>
+       <div>
+        <p class="text-slate-400 text-xs uppercase tracking-wider">Moderate</p>
+        <p id="stat-moderate" class="orbitron text-2xl font-bold text-amber-400">0</p>
        </div>
       </div>
      </div>
-     <div class="stat-card card-glass rounded-xl p-4 shadow-lg">
-      <div class="flex items-center justify-between">
-       <div>
-        <p class="text-gray-500 text-sm">Moderate Risk</p>
-        <p id="stat-moderate" class="text-2xl font-bold text-amber-600">0</p>
+     <div class="glass-card rounded-xl p-4 animate-fade-in" style="animation-delay: 0.3s">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center"><span class="text-2xl">🟢</span>
        </div>
-       <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center"><span class="text-2xl">⚠️</span>
+       <div>
+        <p class="text-slate-400 text-xs uppercase tracking-wider">Safe</p>
+        <p id="stat-safe" class="orbitron text-2xl font-bold text-emerald-400">0</p>
        </div>
       </div>
      </div>
-     <div class="stat-card card-glass rounded-xl p-4 shadow-lg">
-      <div class="flex items-center justify-between">
-       <div>
-        <p class="text-gray-500 text-sm">Tankers Needed</p>
-        <p id="stat-tankers" class="text-2xl font-bold text-blue-600">0</p>
+     <div class="glass-card rounded-xl p-4 animate-fade-in" style="animation-delay: 0.4s">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center"><span class="text-2xl">🚛</span>
        </div>
-       <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center"><span class="text-2xl">🚛</span>
+       <div>
+        <p class="text-slate-400 text-xs uppercase tracking-wider">Tankers Needed</p>
+        <p id="stat-tankers" class="orbitron text-2xl font-bold text-cyan-400">0</p>
        </div>
       </div>
      </div>
-    </section><!-- Main Content Grid -->
-    <div class="grid lg:grid-cols-3 gap-6"><!-- Map Section -->
-     <section class="lg:col-span-2">
-      <div class="card-glass rounded-xl shadow-lg overflow-hidden">
-       <div class="p-4 border-b border-gray-100 flex items-center justify-between">
-        <h2 class="font-semibold text-gray-800 flex items-center gap-2"><span>🗺️</span> Village Risk Map</h2>
-        <div class="flex items-center gap-4 text-xs"><span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500"></span> Safe</span> <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Moderate</span> <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500"></span> High Risk</span>
+    </div>
+   </section><!-- Main Content Grid -->
+   <section class="max-w-7xl mx-auto px-4 pb-6">
+    <div class="grid lg:grid-cols-3 gap-6"><!-- Map View -->
+     <div class="lg:col-span-2 glass-card rounded-2xl overflow-hidden">
+      <div class="p-4 border-b border-cyan-500/20 flex items-center justify-between">
+       <h2 class="orbitron text-lg font-semibold text-cyan-400">📍 District Map View</h2>
+       <div class="flex gap-2 text-xs"><span class="px-2 py-1 rounded bg-red-500/20 text-red-400">● High Risk</span> <span class="px-2 py-1 rounded bg-amber-500/20 text-amber-400">● Moderate</span> <span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">● Safe</span>
+       </div>
+      </div>
+      <div id="map-area" class="map-container relative h-80 md:h-96 overflow-hidden"><!-- Scan effect -->
+       <div class="absolute inset-0 pointer-events-none opacity-20">
+        <div class="w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-scan"></div>
+       </div><!-- Grid lines -->
+       <svg class="absolute inset-0 w-full h-full opacity-10"><defs>
+         <pattern id="grid" width="40" height="40" patternunits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#38bdf8" stroke-width="0.5" />
+         </pattern>
+        </defs> <rect width="100%" height="100%" fill="url(#grid)" />
+       </svg><!-- Villages will be rendered here -->
+       <div id="map-villages" class="absolute inset-0"></div><!-- Empty state -->
+       <div id="map-empty" class="absolute inset-0 flex items-center justify-center">
+        <div class="text-center">
+         <div class="text-6xl mb-4">
+          🗺️
+         </div>
+         <p class="text-slate-400">Add villages to see them on the map</p>
         </div>
        </div>
-       <div id="map-area" class="map-container h-80 md:h-96 relative">
-        <div class="water-wave"></div><!-- Map grid lines -->
-        <svg class="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg"><defs>
-          <pattern id="grid" width="40" height="40" patternunits="userSpaceOnUse">
-           <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#2e7d32" stroke-width="0.5" />
-          </pattern>
-         </defs> <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg><!-- Village dots will be added here dynamically -->
-        <div id="map-villages"></div>
-        <div id="empty-map-message" class="absolute inset-0 flex items-center justify-center text-gray-500">
-         <div class="text-center"><span class="text-4xl mb-2 block">🏘️</span>
-          <p>No villages added yet</p>
-          <p class="text-sm">Click "Add Village" to get started</p>
+      </div>
+     </div><!-- Add Village Form -->
+     <div class="glass-card rounded-2xl overflow-hidden">
+      <div class="p-4 border-b border-cyan-500/20">
+       <h2 class="orbitron text-lg font-semibold text-cyan-400">➕ Add Village Data</h2>
+      </div>
+      <div class="p-4 space-y-4 scroll-container max-h-96 overflow-y-auto">
+       <div><label class="block text-slate-400 text-sm mb-2">Village Name</label> <input type="text" id="input-village" placeholder="e.g., Rampur" class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-600 focus:border-cyan-500 focus:outline-none text-white placeholder-slate-500">
+       </div>
+       <div><label class="block text-slate-400 text-sm mb-2"> Rainfall: <span id="rainfall-value" class="text-cyan-400">50%</span> </label> <input type="range" id="input-rainfall" min="0" max="100" value="50" class="w-full">
+        <div class="flex justify-between text-xs text-slate-500 mt-1"><span>0% (Drought)</span> <span>100% (Normal)</span>
+        </div>
+       </div>
+       <div><label class="block text-slate-400 text-sm mb-2"> Groundwater Drop: <span id="groundwater-value" class="text-amber-400">30%</span> </label> <input type="range" id="input-groundwater" min="0" max="100" value="30" class="w-full">
+        <div class="flex justify-between text-xs text-slate-500 mt-1"><span>0% (Stable)</span> <span>100% (Critical)</span>
+        </div>
+       </div>
+       <div><label class="block text-slate-400 text-sm mb-2">Population</label> <input type="number" id="input-population" placeholder="e.g., 5000" min="100" class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-600 focus:border-cyan-500 focus:outline-none text-white placeholder-slate-500">
+       </div><!-- Preview -->
+       <div id="preview-box" class="p-4 rounded-lg bg-slate-800/30 border border-slate-700">
+        <p class="text-slate-400 text-sm mb-2">Water Stress Preview:</p>
+        <div class="flex items-center gap-3">
+         <div id="preview-score" class="orbitron text-3xl font-bold text-cyan-400">
+          --
+         </div>
+         <div><span id="preview-risk" class="px-3 py-1 rounded-full text-sm font-semibold bg-slate-700 text-slate-400"> Enter Data </span>
          </div>
         </div>
+        <div id="preview-tankers" class="mt-2 text-sm text-slate-400">
+         Tankers needed: <span class="text-cyan-400">--</span>
+        </div>
+       </div><button id="btn-add" class="w-full py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"> <span>➕</span> Add Village </button>
+       <div id="limit-warning" class="hidden p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-sm text-center">
+        ⚠️ Maximum 999 villages reached
        </div>
       </div>
-     </section><!-- Priority Queue -->
-     <section>
-      <div class="card-glass rounded-xl shadow-lg h-full">
-       <div class="p-4 border-b border-gray-100">
-        <h2 class="font-semibold text-gray-800 flex items-center gap-2"><span>🚛</span> Tanker Priority Queue</h2>
-        <p class="text-xs text-gray-500 mt-1">Sorted by urgency (High risk first)</p>
+     </div>
+    </div>
+   </section><!-- Villages List & Tanker Allocation -->
+   <section class="max-w-7xl mx-auto px-4 pb-6">
+    <div class="grid lg:grid-cols-2 gap-6"><!-- Priority Queue -->
+     <div class="glass-card rounded-2xl overflow-hidden">
+      <div class="p-4 border-b border-cyan-500/20 flex items-center justify-between">
+       <h2 class="orbitron text-lg font-semibold text-cyan-400">🚨 Priority Queue</h2><span class="text-xs text-slate-400">Sorted by urgency</span>
+      </div>
+      <div id="priority-list" class="p-4 space-y-3 scroll-container max-h-80 overflow-y-auto">
+       <div class="text-center py-8 text-slate-500">
+        <div class="text-4xl mb-2">
+         📋
+        </div>
+        <p>No villages added yet</p>
        </div>
-       <div id="priority-queue" class="p-4 space-y-3 max-h-80 overflow-auto scrollbar-thin">
-        <div id="empty-queue-message" class="text-center py-8 text-gray-400"><span class="text-3xl mb-2 block">📋</span>
-         <p class="text-sm">No villages in queue</p>
+      </div>
+     </div><!-- Tanker Dispatch -->
+     <div class="glass-card rounded-2xl overflow-hidden">
+      <div class="p-4 border-b border-cyan-500/20 flex items-center justify-between">
+       <h2 class="orbitron text-lg font-semibold text-cyan-400">🚛 Smart Tanker Dispatch</h2><button id="btn-dispatch" class="px-4 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all text-sm disabled:opacity-50"> Generate Route </button>
+      </div>
+      <div id="dispatch-info" class="p-4">
+       <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="text-center p-3 rounded-lg bg-slate-800/50">
+         <p class="text-slate-400 text-xs">Total Distance</p>
+         <p id="total-distance" class="orbitron text-xl text-cyan-400">-- km</p>
+        </div>
+        <div class="text-center p-3 rounded-lg bg-slate-800/50">
+         <p class="text-slate-400 text-xs">Est. Time</p>
+         <p id="total-time" class="orbitron text-xl text-amber-400">-- hrs</p>
+        </div>
+        <div class="text-center p-3 rounded-lg bg-slate-800/50">
+         <p class="text-slate-400 text-xs">Fuel Est.</p>
+         <p id="total-fuel" class="orbitron text-xl text-emerald-400">-- L</p>
+        </div>
+       </div>
+       <div id="route-list" class="space-y-2 scroll-container max-h-48 overflow-y-auto">
+        <div class="text-center py-4 text-slate-500 text-sm">
+         Click "Generate Route" to optimize tanker dispatch
         </div>
        </div>
       </div>
-     </section>
-    </div><!-- Village List -->
-    <section class="card-glass rounded-xl shadow-lg">
-     <div class="p-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-4">
-      <h2 class="font-semibold text-gray-800 flex items-center gap-2"><span>📊</span> Village Data Overview</h2>
-      <div class="flex items-center gap-2"><select id="filter-risk" onchange="applyFilter()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"> <option value="all">All Risk Levels</option> <option value="high">🔴 High Risk Only</option> <option value="moderate">🟡 Moderate Only</option> <option value="safe">🟢 Safe Only</option> </select>
-      </div>
      </div>
-     <div class="overflow-x-auto">
-      <table class="w-full">
-       <thead class="bg-gray-50">
-        <tr>
-         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Village</th>
-         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rainfall %</th>
-         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">GW Drop %</th>
-         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Population</th>
-         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">WSI Score</th>
-         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Risk Level</th>
-         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tankers</th>
-         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
-        </tr>
-       </thead>
-       <tbody id="village-table-body">
-        <tr id="empty-table-row">
-         <td colspan="8" class="px-4 py-12 text-center text-gray-400"><span class="text-3xl mb-2 block">📭</span> <p>No village data available</p><p class="text-sm">Add villages to start monitoring</p></td>
-        </tr>
-       </tbody>
-      </table>
-     </div>
-    </section><!-- Water Stress Formula Info -->
-    <section class="card-glass rounded-xl shadow-lg p-6">
-     <h2 class="font-semibold text-gray-800 flex items-center gap-2 mb-4"><span>📐</span> Water Stress Index (WSI) Formula</h2>
-     <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-100"><code class="text-blue-800 font-mono text-sm"> WSI = (100 - Rainfall%) + Groundwater Drop% + (Population / 100) </code>
-     </div>
-     <div class="grid md:grid-cols-3 gap-4 mt-4">
-      <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg"><span class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-sm">0-50</span>
-       <div>
-        <p class="font-medium text-green-800">Safe Zone</p>
-        <p class="text-xs text-green-600">0-1 tanker needed</p>
-       </div>
-      </div>
-      <div class="flex items-center gap-3 p-3 bg-amber-50 rounded-lg"><span class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold text-sm">50-100</span>
-       <div>
-        <p class="font-medium text-amber-800">Moderate Risk</p>
-        <p class="text-xs text-amber-600">2 tankers needed</p>
-       </div>
-      </div>
-      <div class="flex items-center gap-3 p-3 bg-red-50 rounded-lg"><span class="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-bold text-sm">100+</span>
-       <div>
-        <p class="font-medium text-red-800">High Risk</p>
-        <p class="text-xs text-red-600">3+ tankers needed</p>
-       </div>
-      </div>
-     </div>
-    </section>
-   </main><!-- Add Village Modal -->
-   <div id="add-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl transform transition-all">
-     <div class="p-6 border-b border-gray-100">
-      <div class="flex items-center justify-between">
-       <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2"><span>🏘️</span> Add New Village</h3><button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition"> <span>✕</span> </button>
-      </div>
-     </div>
-     <form id="add-village-form" onsubmit="handleAddVillage(event)" class="p-6 space-y-4">
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Village Name *</label> <input type="text" id="input-name" required placeholder="e.g., Rampur" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <div class="grid grid-cols-2 gap-4">
-       <div><label class="block text-sm font-medium text-gray-700 mb-1">Rainfall % *</label> <input type="number" id="input-rainfall" required min="0" max="100" placeholder="0-100" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <p class="text-xs text-gray-400 mt-1">Normal = 100%</p>
-       </div>
-       <div><label class="block text-sm font-medium text-gray-700 mb-1">Groundwater Drop % *</label> <input type="number" id="input-groundwater" required min="0" max="100" placeholder="0-100" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <p class="text-xs text-gray-400 mt-1">Higher = worse</p>
-       </div>
-      </div>
-      <div><label class="block text-sm font-medium text-gray-700 mb-1">Population *</label> <input type="number" id="input-population" required min="1" placeholder="e.g., 5000" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <div id="form-error" class="hidden bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm"></div>
-      <div id="limit-warning" class="hidden bg-amber-50 text-amber-600 px-4 py-2 rounded-lg text-sm">
-       ⚠️ Maximum limit of 999 villages reached. Please delete some villages first.
-      </div><button type="submit" id="submit-btn" class="w-full btn-primary py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2"> <span id="submit-text">Calculate &amp; Add Village</span> <span id="submit-spinner" class="hidden">
-        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg></span> </button>
-     </form>
     </div>
-   </div><!-- Delete Confirmation Modal -->
-   <div id="delete-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
-     <div class="p-6 text-center">
-      <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4"><span class="text-3xl">🗑️</span>
+   </section><!-- Formula Explanation -->
+   <section class="max-w-7xl mx-auto px-4 pb-6">
+    <div class="glass-card rounded-2xl p-6">
+     <h2 class="orbitron text-lg font-semibold text-cyan-400 mb-4">📊 How Water Stress Index Works</h2>
+     <div class="grid md:grid-cols-3 gap-6">
+      <div class="p-4 rounded-lg bg-slate-800/30">
+       <div class="text-3xl mb-2">
+        🌧️
+       </div>
+       <h3 class="font-semibold text-white mb-1">Rainfall Factor</h3>
+       <p class="text-slate-400 text-sm">100 - Rainfall% = Drought severity. Lower rainfall = higher stress.</p><code class="text-cyan-400 text-xs mt-2 block">(100 - rainfall) × 0.4</code>
       </div>
-      <h3 class="text-xl font-bold text-gray-800 mb-2">Delete Village?</h3>
-      <p class="text-gray-500 mb-6">Are you sure you want to delete <strong id="delete-village-name"></strong>? This action cannot be undone.</p>
-      <div class="flex gap-3"><button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition"> Cancel </button> <button onclick="confirmDelete()" id="confirm-delete-btn" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition flex items-center justify-center gap-2"> <span id="delete-text">Delete</span> <span id="delete-spinner" class="hidden">
-         <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-         </svg></span> </button>
+      <div class="p-4 rounded-lg bg-slate-800/30">
+       <div class="text-3xl mb-2">
+        💧
+       </div>
+       <h3 class="font-semibold text-white mb-1">Groundwater Factor</h3>
+       <p class="text-slate-400 text-sm">Direct measure of water table drop. Higher drop = more critical.</p><code class="text-cyan-400 text-xs mt-2 block">groundwater_drop × 0.4</code>
+      </div>
+      <div class="p-4 rounded-lg bg-slate-800/30">
+       <div class="text-3xl mb-2">
+        👥
+       </div>
+       <h3 class="font-semibold text-white mb-1">Population Factor</h3>
+       <p class="text-slate-400 text-sm">More people = more water demand. Logarithmic scale for fairness.</p><code class="text-cyan-400 text-xs mt-2 block">log10(population) × 5</code>
+      </div>
+     </div>
+     <div class="mt-6 p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+      <p class="text-center"><span class="text-slate-400">Final Score:</span> <span class="orbitron text-cyan-400 ml-2">WSI = Rainfall Factor + Groundwater Factor + Population Factor</span></p>
+      <div class="flex justify-center gap-6 mt-3 text-sm"><span class="text-emerald-400">0-50: Safe 🟢</span> <span class="text-amber-400">50-100: Moderate 🟡</span> <span class="text-red-400">100+: High Risk 🔴</span>
       </div>
      </div>
     </div>
-   </div><!-- Toast Notification -->
-   <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50"><span id="toast-message"></span>
-   </div>
+   </section>
   </div>
   <script>
     // Default configuration
     const defaultConfig = {
       dashboard_title: 'Drought Warning System',
-      district_name: 'Jaipur District',
-      background_color: '#1e3a5f',
-      card_color: '#ffffff',
-      text_color: '#1f2937',
-      primary_color: '#2563eb',
-      accent_color: '#22c55e'
+      district_name: 'District Command Center',
+      background_color: '#0f172a',
+      surface_color: '#1e293b',
+      text_color: '#e2e8f0',
+      primary_action_color: '#06b6d4',
+      secondary_action_color: '#10b981',
+      font_family: 'Rajdhani',
+      font_size: 16
     };
 
-    // App state
+    let config = { ...defaultConfig };
     let villageData = [];
-    let currentFilter = 'all';
-    let villageToDelete = null;
+    let currentRecordCount = 0;
 
     // Calculate Water Stress Index
-    function calculateWSI(rainfall, groundwaterDrop, population) {
-      const rainfallFactor = 100 - rainfall;
-      const populationFactor = population / 100;
-      return Math.round(rainfallFactor + groundwaterDrop + populationFactor);
+    function calculateWSI(rainfall, groundwater, population) {
+      const rainfallFactor = (100 - rainfall) * 0.4;
+      const groundwaterFactor = groundwater * 0.4;
+      const populationFactor = Math.log10(Math.max(population, 100)) * 5;
+      return Math.round(rainfallFactor + groundwaterFactor + populationFactor);
     }
 
-    // Determine risk level and tankers needed
-    function getRiskInfo(wsi) {
-      if (wsi >= 100) {
-        return { level: 'high', tankers: 3, color: 'red', label: 'High Risk' };
-      } else if (wsi >= 50) {
-        return { level: 'moderate', tankers: 2, color: 'amber', label: 'Moderate' };
-      } else {
-        return { level: 'safe', tankers: wsi > 25 ? 1 : 0, color: 'green', label: 'Safe' };
-      }
+    // Get risk level from WSI
+    function getRiskLevel(wsi) {
+      if (wsi >= 100) return { level: 'HIGH', color: 'red', tankers: 3, emoji: '🔴' };
+      if (wsi >= 50) return { level: 'MODERATE', color: 'amber', tankers: 2, emoji: '🟡' };
+      return { level: 'SAFE', color: 'emerald', tankers: 0, emoji: '🟢' };
     }
 
-    // Generate random position for map
-    function getRandomPosition() {
-      return {
-        lat: 10 + Math.random() * 80,
-        lng: 10 + Math.random() * 80
-      };
-    }
+    // Update preview as user inputs data
+    function updatePreview() {
+      const rainfall = parseInt(document.getElementById('input-rainfall').value);
+      const groundwater = parseInt(document.getElementById('input-groundwater').value);
+      const population = parseInt(document.getElementById('input-population').value) || 1000;
 
-    // Show toast notification
-    function showToast(message, type = 'success') {
-      const toast = document.getElementById('toast');
-      const toastMessage = document.getElementById('toast-message');
-      toastMessage.textContent = message;
-      toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 z-50 ${
-        type === 'error' ? 'bg-red-600' : type === 'warning' ? 'bg-amber-500' : 'bg-green-600'
-      } text-white translate-y-0 opacity-100`;
-      setTimeout(() => {
-        toast.className = toast.className.replace('translate-y-0 opacity-100', 'translate-y-20 opacity-0');
-      }, 3000);
-    }
+      document.getElementById('rainfall-value').textContent = rainfall + '%';
+      document.getElementById('groundwater-value').textContent = groundwater + '%';
 
-    // Open add village modal
-    function openAddModal() {
-      if (villageData.length >= 999) {
-        document.getElementById('limit-warning').classList.remove('hidden');
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('submit-btn').classList.add('opacity-50', 'cursor-not-allowed');
-      } else {
-        document.getElementById('limit-warning').classList.add('hidden');
-        document.getElementById('submit-btn').disabled = false;
-        document.getElementById('submit-btn').classList.remove('opacity-50', 'cursor-not-allowed');
-      }
-      document.getElementById('add-modal').classList.remove('hidden');
-      document.getElementById('add-modal').classList.add('flex');
-      document.getElementById('form-error').classList.add('hidden');
-    }
+      const wsi = calculateWSI(rainfall, groundwater, population);
+      const risk = getRiskLevel(wsi);
 
-    // Close add village modal
-    function closeAddModal() {
-      document.getElementById('add-modal').classList.add('hidden');
-      document.getElementById('add-modal').classList.remove('flex');
-      document.getElementById('add-village-form').reset();
-    }
-
-    // Handle add village form submission
-    async function handleAddVillage(event) {
-      event.preventDefault();
+      document.getElementById('preview-score').textContent = wsi;
+      document.getElementById('preview-score').className = `orbitron text-3xl font-bold text-${risk.color}-400`;
       
-      if (villageData.length >= 999) {
-        showToast('Maximum limit of 999 villages reached', 'error');
-        return;
-      }
-
-      const submitBtn = document.getElementById('submit-btn');
-      const submitText = document.getElementById('submit-text');
-      const submitSpinner = document.getElementById('submit-spinner');
-      const formError = document.getElementById('form-error');
-
-      // Show loading state
-      submitBtn.disabled = true;
-      submitText.classList.add('hidden');
-      submitSpinner.classList.remove('hidden');
-      formError.classList.add('hidden');
-
-      try {
-        const name = document.getElementById('input-name').value.trim();
-        const rainfall = parseFloat(document.getElementById('input-rainfall').value);
-        const groundwater = parseFloat(document.getElementById('input-groundwater').value);
-        const population = parseInt(document.getElementById('input-population').value);
-
-        // Validate inputs
-        if (!name || isNaN(rainfall) || isNaN(groundwater) || isNaN(population)) {
-          formError.textContent = 'Please fill in all fields with valid values.';
-          formError.classList.remove('hidden');
-          submitBtn.disabled = false;
-          submitText.classList.remove('hidden');
-          submitSpinner.classList.add('hidden');
-          return;
-        }
-
-        // Calculate WSI and risk info
-        const wsi = calculateWSI(rainfall, groundwater, population);
-        const riskInfo = getRiskInfo(wsi);
-        const position = getRandomPosition();
-
-        const newVillage = {
-          village_name: name,
-          rainfall_percent: rainfall,
-          groundwater_drop: groundwater,
-          population: population,
-          water_stress_score: wsi,
-          risk_level: riskInfo.level,
-          tankers_needed: riskInfo.tankers,
-          lat: position.lat,
-          lng: position.lng,
-          created_at: new Date().toISOString()
-        };
-
-        if (window.dataSdk) {
-          const result = await window.dataSdk.create(newVillage);
-          if (result.isOk) {
-            showToast(`${name} added successfully! WSI: ${wsi} (${riskInfo.label})`);
-            document.getElementById('add-village-form').reset();
-            closeAddModal();
-          } else {
-            formError.textContent = 'Failed to save village. Please try again.';
-            formError.classList.remove('hidden');
-          }
-        } else {
-          // Fallback if Data SDK not available
-          formError.textContent = 'Data SDK not available. Please refresh the page.';
-          formError.classList.remove('hidden');
-        }
-      } catch (error) {
-        formError.textContent = 'An error occurred. Please try again.';
-        formError.classList.remove('hidden');
-      } finally {
-        // Reset loading state
-        submitBtn.disabled = false;
-        submitText.classList.remove('hidden');
-        submitSpinner.classList.add('hidden');
-      }
+      const riskBadge = document.getElementById('preview-risk');
+      riskBadge.textContent = `${risk.emoji} ${risk.level}`;
+      riskBadge.className = `px-3 py-1 rounded-full text-sm font-semibold bg-${risk.color}-500/20 text-${risk.color}-400`;
+      
+      document.getElementById('preview-tankers').innerHTML = 
+        `Tankers needed: <span class="text-${risk.color}-400">${risk.tankers}</span>`;
     }
 
-    // Open delete confirmation modal
-    function openDeleteModal(village) {
-      villageToDelete = village;
-      document.getElementById('delete-village-name').textContent = village.village_name;
-      document.getElementById('delete-modal').classList.remove('hidden');
-      document.getElementById('delete-modal').classList.add('flex');
+    // Update time display
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('current-time').textContent = now.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
     }
 
-    // Close delete modal
-    function closeDeleteModal() {
-      villageToDelete = null;
-      document.getElementById('delete-modal').classList.add('hidden');
-      document.getElementById('delete-modal').classList.remove('flex');
-    }
-
-    // Confirm delete
-    async function confirmDelete() {
-      if (!villageToDelete) return;
-
-      const deleteBtn = document.getElementById('confirm-delete-btn');
-      const deleteText = document.getElementById('delete-text');
-      const deleteSpinner = document.getElementById('delete-spinner');
-
-      deleteBtn.disabled = true;
-      deleteText.classList.add('hidden');
-      deleteSpinner.classList.remove('hidden');
-
-      if (window.dataSdk) {
-        const result = await window.dataSdk.delete(villageToDelete);
-        if (result.isOk) {
-          showToast(`${villageToDelete.village_name} deleted successfully`);
-          closeDeleteModal();
-        } else {
-          showToast('Failed to delete village', 'error');
-        }
-      }
-
-      deleteBtn.disabled = false;
-      deleteText.classList.remove('hidden');
-      deleteSpinner.classList.add('hidden');
-    }
-
-    // Apply filter
-    function applyFilter() {
-      currentFilter = document.getElementById('filter-risk').value;
-      renderVillageTable();
-    }
-
-    // Render map villages
-    function renderMapVillages() {
-      const mapContainer = document.getElementById('map-villages');
-      const emptyMessage = document.getElementById('empty-map-message');
+    // Render map with villages
+    function renderMap() {
+      const mapArea = document.getElementById('map-villages');
+      const emptyState = document.getElementById('map-empty');
       
       if (villageData.length === 0) {
-        mapContainer.innerHTML = '';
-        emptyMessage.classList.remove('hidden');
+        mapArea.innerHTML = '';
+        emptyState.classList.remove('hidden');
         return;
       }
       
-      emptyMessage.classList.add('hidden');
-
-      // Build HTML string instead of creating elements one by one
-      let html = '';
-      const riskColors = {
-        high: 'bg-red-500 pulse-red',
-        moderate: 'bg-amber-500 pulse-yellow',
-        safe: 'bg-green-500'
-      };
-
-      villageData.forEach((village) => {
-        const colorClass = riskColors[village.risk_level];
-        html += `
-          <div class="village-dot ${colorClass}" style="left: ${village.lng}%; top: ${village.lat}%;" data-village-id="${village.__backendId}"></div>
-          <div class="tooltip" style="left: ${village.lng}%; top: ${village.lat - 8}%;">
-            <strong>${village.village_name}</strong><br>
-            WSI: ${village.water_stress_score} | Tankers: ${village.tankers_needed}
+      emptyState.classList.add('hidden');
+      mapArea.innerHTML = '';
+      
+      villageData.forEach((village, index) => {
+        const risk = getRiskLevel(village.water_stress_score);
+        const dot = document.createElement('div');
+        dot.className = `village-dot absolute flex flex-col items-center`;
+        dot.style.left = `${village.lat}%`;
+        dot.style.top = `${village.lng}%`;
+        dot.style.animationDelay = `${index * 0.1}s`;
+        
+        const colorMap = { red: '#ef4444', amber: '#f59e0b', emerald: '#10b981' };
+        
+        dot.innerHTML = `
+          <div class="relative">
+            <div class="w-4 h-4 rounded-full animate-pulse-glow" 
+                 style="background: ${colorMap[risk.color]}; color: ${colorMap[risk.color]}">
+            </div>
+            <div class="absolute -inset-2 rounded-full opacity-30 animate-ping"
+                 style="background: ${colorMap[risk.color]}"></div>
+          </div>
+          <div class="mt-1 px-2 py-0.5 rounded text-xs bg-slate-900/80 text-white whitespace-nowrap">
+            ${village.village_name}
           </div>
         `;
+        
+        dot.onclick = () => showVillageDetails(village);
+        mapArea.appendChild(dot);
       });
-      
-      mapContainer.innerHTML = html;
     }
 
-    // Render priority queue
-    function renderPriorityQueue() {
-      const queueContainer = document.getElementById('priority-queue');
-      const emptyMessage = document.getElementById('empty-queue-message');
+    // Show village details (inline tooltip style)
+    function showVillageDetails(village) {
+      const risk = getRiskLevel(village.water_stress_score);
+      const existingTooltip = document.querySelector('.village-tooltip');
+      if (existingTooltip) existingTooltip.remove();
       
-      // Sort by WSI (highest first)
-      const sortedVillages = [...villageData]
-        .filter(v => v.tankers_needed > 0)
-        .sort((a, b) => b.water_stress_score - a.water_stress_score);
-
-      if (sortedVillages.length === 0) {
-        queueContainer.innerHTML = emptyMessage.outerHTML;
-        return;
-      }
-
-      const riskStyles = {
-        high: 'risk-high',
-        moderate: 'risk-moderate',
-        safe: 'risk-safe'
-      };
-
-      let html = '';
-      sortedVillages.forEach((village, index) => {
-        html += `
-          <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition">
-            <div class="w-8 h-8 rounded-full ${riskStyles[village.risk_level]} flex items-center justify-center text-white font-bold text-sm">${index + 1}</div>
-            <div class="flex-1 min-w-0"><p class="font-medium text-gray-800 truncate">${village.village_name}</p><p class="text-xs text-gray-500">WSI: ${village.water_stress_score}</p></div>
-            <div class="text-right"><p class="font-bold text-gray-800">${village.tankers_needed}</p><p class="text-xs text-gray-500">tankers</p></div>
-          </div>
-        `;
-      });
-      
-      queueContainer.innerHTML = html;
-    }
-
-    // Render village table
-    function renderVillageTable() {
-      const tableBody = document.getElementById('village-table-body');
-      
-      let filteredVillages = [...villageData];
-      
-      if (currentFilter !== 'all') {
-        filteredVillages = filteredVillages.filter(v => v.risk_level === currentFilter);
-      }
-      
-      // Sort by WSI descending
-      filteredVillages.sort((a, b) => b.water_stress_score - a.water_stress_score);
-
-      if (filteredVillages.length === 0) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="8" class="px-4 py-12 text-center text-gray-400">
-              <span class="text-3xl mb-2 block">${currentFilter === 'all' ? '📭' : '🔍'}</span>
-              <p>${currentFilter === 'all' ? 'No village data available' : 'No villages match this filter'}</p>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      const riskBadges = {
-        high: 'bg-red-100 text-red-700',
-        moderate: 'bg-amber-100 text-amber-700',
-        safe: 'bg-green-100 text-green-700'
-      };
-      
-      const riskLabels = {
-        high: '🔴 High',
-        moderate: '🟡 Moderate',
-        safe: '🟢 Safe'
-      };
-
-      let html = '';
-      filteredVillages.forEach(village => {
-        const rainfallColor = village.rainfall_percent >= 70 ? 'bg-green-500' : village.rainfall_percent >= 40 ? 'bg-amber-500' : 'bg-red-500';
-        const gwColor = village.groundwater_drop <= 30 ? 'bg-green-500' : village.groundwater_drop <= 60 ? 'bg-amber-500' : 'bg-red-500';
-        const wsiColor = village.water_stress_score >= 100 ? 'text-red-600' : village.water_stress_score >= 50 ? 'text-amber-600' : 'text-green-600';
-        const tankersDisplay = Array(village.tankers_needed).fill('🚛').join('') || '—';
-
-        html += `
-          <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
-            <td class="px-4 py-3"><div class="font-medium text-gray-800">${village.village_name}</div></td>
-            <td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden"><div class="h-full ${rainfallColor}" style="width: ${village.rainfall_percent}%"></div></div><span class="text-sm text-gray-600">${village.rainfall_percent}%</span></div></td>
-            <td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden"><div class="h-full ${gwColor}" style="width: ${village.groundwater_drop}%"></div></div><span class="text-sm text-gray-600">${village.groundwater_drop}%</span></div></td>
-            <td class="px-4 py-3 text-gray-600">${village.population.toLocaleString()}</td>
-            <td class="px-4 py-3"><span class="font-bold ${wsiColor}">${village.water_stress_score}</span></td>
-            <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs font-medium ${riskBadges[village.risk_level]}">${riskLabels[village.risk_level]}</span></td>
-            <td class="px-4 py-3"><div class="flex items-center gap-1">${tankersDisplay}</div></td>
-            <td class="px-4 py-3"><button onclick="openDeleteModal(${JSON.stringify(village).replace(/'/g, "\\'")})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition" title="Delete">🗑️</button></td>
-          </tr>
-        `;
-      });
-      
-      tableBody.innerHTML = html;
+      const tooltip = document.createElement('div');
+      tooltip.className = 'village-tooltip fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 glass-card rounded-xl p-4 min-w-64';
+      tooltip.innerHTML = `
+        <div class="flex justify-between items-start mb-3">
+          <h3 class="orbitron text-lg font-bold text-cyan-400">${village.village_name}</h3>
+          <button onclick="this.parentElement.parentElement.remove()" class="text-slate-400 hover:text-white">✕</button>
+        </div>
+        <div class="space-y-2 text-sm">
+          <p><span class="text-slate-400">WSI Score:</span> <span class="orbitron text-${risk.color}-400">${village.water_stress_score}</span></p>
+          <p><span class="text-slate-400">Risk Level:</span> <span class="text-${risk.color}-400">${risk.emoji} ${risk.level}</span></p>
+          <p><span class="text-slate-400">Rainfall:</span> ${village.rainfall_percent}%</p>
+          <p><span class="text-slate-400">Groundwater Drop:</span> ${village.groundwater_drop}%</p>
+          <p><span class="text-slate-400">Population:</span> ${village.population.toLocaleString()}</p>
+          <p><span class="text-slate-400">Tankers Needed:</span> ${village.tankers_needed}</p>
+        </div>
+        <button onclick="deleteVillage('${village.__backendId}'); this.parentElement.remove();" 
+                class="mt-3 w-full py-2 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 text-sm">
+          🗑️ Remove Village
+        </button>
+      `;
+      document.body.appendChild(tooltip);
     }
 
     // Update statistics
     function updateStats() {
-      const total = villageData.length;
-      const highRisk = villageData.filter(v => v.risk_level === 'high').length;
-      const moderate = villageData.filter(v => v.risk_level === 'moderate').length;
-      const totalTankers = villageData.reduce((sum, v) => sum + v.tankers_needed, 0);
-
-      document.getElementById('stat-total').textContent = total;
-      document.getElementById('stat-high').textContent = highRisk;
+      let high = 0, moderate = 0, safe = 0, totalTankers = 0;
+      
+      villageData.forEach(v => {
+        const risk = getRiskLevel(v.water_stress_score);
+        if (risk.level === 'HIGH') high++;
+        else if (risk.level === 'MODERATE') moderate++;
+        else safe++;
+        totalTankers += v.tankers_needed;
+      });
+      
+      document.getElementById('stat-high').textContent = high;
       document.getElementById('stat-moderate').textContent = moderate;
+      document.getElementById('stat-safe').textContent = safe;
       document.getElementById('stat-tankers').textContent = totalTankers;
+    }
+
+    // Render priority list
+    function renderPriorityList() {
+      const container = document.getElementById('priority-list');
+      
+      if (villageData.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-500">
+            <div class="text-4xl mb-2">📋</div>
+            <p>No villages added yet</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Sort by WSI descending (highest risk first)
+      const sorted = [...villageData].sort((a, b) => b.water_stress_score - a.water_stress_score);
+      
+      container.innerHTML = sorted.map((village, index) => {
+        const risk = getRiskLevel(village.water_stress_score);
+        const colorMap = { red: 'red', amber: 'amber', emerald: 'emerald' };
+        
+        return `
+          <div class="flex items-center gap-3 p-3 rounded-lg bg-${colorMap[risk.color]}-500/10 border border-${colorMap[risk.color]}-500/20 animate-fade-in" style="animation-delay: ${index * 0.05}s">
+            <div class="w-8 h-8 rounded-full bg-${colorMap[risk.color]}-500/20 flex items-center justify-center text-${colorMap[risk.color]}-400 font-bold">
+              ${index + 1}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-white truncate">${village.village_name}</p>
+              <p class="text-xs text-slate-400">Pop: ${village.population.toLocaleString()} | 🚛 ${village.tankers_needed}</p>
+            </div>
+            <div class="text-right">
+              <p class="orbitron text-lg font-bold text-${colorMap[risk.color]}-400">${village.water_stress_score}</p>
+              <p class="text-xs text-${colorMap[risk.color]}-400">${risk.emoji} ${risk.level}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Generate optimized route
+    function generateRoute() {
+      if (villageData.length === 0) return;
+      
+      // Sort by WSI and create route
+      const sorted = [...villageData]
+        .filter(v => v.tankers_needed > 0)
+        .sort((a, b) => b.water_stress_score - a.water_stress_score);
+      
+      if (sorted.length === 0) {
+        document.getElementById('route-list').innerHTML = `
+          <div class="text-center py-4 text-emerald-400">
+            ✅ All villages are safe! No tankers needed.
+          </div>
+        `;
+        document.getElementById('total-distance').textContent = '0 km';
+        document.getElementById('total-time').textContent = '0 hrs';
+        document.getElementById('total-fuel').textContent = '0 L';
+        return;
+      }
+      
+      // Calculate estimates (simulated)
+      let totalDistance = 0;
+      sorted.forEach((v, i) => {
+        totalDistance += Math.round(10 + Math.random() * 20); // Random 10-30km per village
+      });
+      
+      const totalTime = (totalDistance / 30).toFixed(1); // 30 km/h average
+      const totalFuel = Math.round(totalDistance * 0.4); // 0.4 L/km
+      
+      document.getElementById('total-distance').textContent = totalDistance + ' km';
+      document.getElementById('total-time').textContent = totalTime + ' hrs';
+      document.getElementById('total-fuel').textContent = totalFuel + ' L';
+      
+      document.getElementById('route-list').innerHTML = sorted.map((village, index) => {
+        const risk = getRiskLevel(village.water_stress_score);
+        return `
+          <div class="flex items-center gap-2 p-2 rounded bg-slate-800/50 text-sm">
+            <span class="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xs font-bold">
+              ${index + 1}
+            </span>
+            <span class="flex-1 truncate">${village.village_name}</span>
+            <span class="text-${risk.color}-400">${village.tankers_needed} 🚛</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Delete village
+    async function deleteVillage(backendId) {
+      const village = villageData.find(v => v.__backendId === backendId);
+      if (!village) return;
+      
+      const result = await window.dataSdk.delete(village);
+      if (!result.isOk) {
+        console.error('Failed to delete village:', result.error);
+      }
+    }
+
+    // Add new village
+    async function addVillage() {
+      if (currentRecordCount >= 999) {
+        document.getElementById('limit-warning').classList.remove('hidden');
+        return;
+      }
+      
+      const villageName = document.getElementById('input-village').value.trim();
+      const rainfall = parseInt(document.getElementById('input-rainfall').value);
+      const groundwater = parseInt(document.getElementById('input-groundwater').value);
+      const population = parseInt(document.getElementById('input-population').value);
+      
+      if (!villageName || !population) {
+        // Show inline error
+        const btn = document.getElementById('btn-add');
+        btn.textContent = '⚠️ Please fill all fields';
+        btn.classList.add('bg-red-500');
+        setTimeout(() => {
+          btn.innerHTML = '<span>➕</span> Add Village';
+          btn.classList.remove('bg-red-500');
+        }, 2000);
+        return;
+      }
+      
+      const wsi = calculateWSI(rainfall, groundwater, population);
+      const risk = getRiskLevel(wsi);
+      
+      const newVillage = {
+        village_name: villageName,
+        rainfall_percent: rainfall,
+        groundwater_drop: groundwater,
+        population: population,
+        water_stress_score: wsi,
+        risk_level: risk.level,
+        tankers_needed: risk.tankers,
+        lat: 10 + Math.random() * 80, // Random position for demo
+        lng: 10 + Math.random() * 80,
+        created_at: new Date().toISOString()
+      };
+      
+      const btn = document.getElementById('btn-add');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin">⏳</span> Adding...';
+      
+      const result = await window.dataSdk.create(newVillage);
+      
+      if (result.isOk) {
+        // Clear form
+        document.getElementById('input-village').value = '';
+        document.getElementById('input-rainfall').value = 50;
+        document.getElementById('input-groundwater').value = 30;
+        document.getElementById('input-population').value = '';
+        updatePreview();
+        btn.innerHTML = '<span>✅</span> Added!';
+        setTimeout(() => {
+          btn.innerHTML = '<span>➕</span> Add Village';
+        }, 1500);
+      } else {
+        btn.innerHTML = '<span>❌</span> Failed';
+        setTimeout(() => {
+          btn.innerHTML = '<span>➕</span> Add Village';
+        }, 2000);
+      }
+      
+      btn.disabled = false;
     }
 
     // Data handler for SDK
     const dataHandler = {
       onDataChanged(data) {
         villageData = data;
+        currentRecordCount = data.length;
+        
+        // Update limit warning
+        if (currentRecordCount >= 999) {
+          document.getElementById('limit-warning').classList.remove('hidden');
+        } else {
+          document.getElementById('limit-warning').classList.add('hidden');
+        }
+        
         updateStats();
-        renderMapVillages();
-        renderPriorityQueue();
-        renderVillageTable();
+        renderMap();
+        renderPriorityList();
       }
     };
 
-    // Config change handler for Element SDK
-    async function onConfigChange(config) {
-      const title = config.dashboard_title || defaultConfig.dashboard_title;
-      const district = config.district_name || defaultConfig.district_name;
+    // Apply config changes
+    async function onConfigChange(cfg) {
+      config = { ...defaultConfig, ...cfg };
       
-      document.getElementById('main-title').textContent = title;
-      document.getElementById('district-subtitle').textContent = `${district} • Real-time Monitoring`;
+      document.getElementById('main-title').textContent = config.dashboard_title;
+      document.getElementById('district-subtitle').textContent = config.district_name;
+      
+      // Apply font
+      document.body.style.fontFamily = `${config.font_family}, Rajdhani, sans-serif`;
+      
+      // Apply font size scaling
+      const baseSize = config.font_size;
+      document.querySelectorAll('.orbitron').forEach(el => {
+        if (el.classList.contains('text-2xl')) {
+          el.style.fontSize = `${baseSize * 1.5}px`;
+        } else if (el.classList.contains('text-xl')) {
+          el.style.fontSize = `${baseSize * 1.25}px`;
+        } else if (el.classList.contains('text-lg')) {
+          el.style.fontSize = `${baseSize * 1.125}px`;
+        }
+      });
     }
 
-    // Initialize SDKs
+    // Initialize everything
     async function init() {
+      // Update time
+      updateTime();
+      setInterval(updateTime, 1000);
+      
+      // Setup event listeners
+      document.getElementById('input-rainfall').addEventListener('input', updatePreview);
+      document.getElementById('input-groundwater').addEventListener('input', updatePreview);
+      document.getElementById('input-population').addEventListener('input', updatePreview);
+      document.getElementById('btn-add').addEventListener('click', addVillage);
+      document.getElementById('btn-dispatch').addEventListener('click', generateRoute);
+      
+      updatePreview();
+      
       // Initialize Element SDK
       if (window.elementSdk) {
         window.elementSdk.init({
           defaultConfig,
           onConfigChange,
-          mapToCapabilities: (config) => ({
+          mapToCapabilities: (cfg) => ({
             recolorables: [
               {
-                get: () => config.background_color || defaultConfig.background_color,
-                set: (value) => window.elementSdk.setConfig({ background_color: value })
+                get: () => cfg.background_color || defaultConfig.background_color,
+                set: (v) => { cfg.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
               },
               {
-                get: () => config.card_color || defaultConfig.card_color,
-                set: (value) => window.elementSdk.setConfig({ card_color: value })
+                get: () => cfg.surface_color || defaultConfig.surface_color,
+                set: (v) => { cfg.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
               },
               {
-                get: () => config.text_color || defaultConfig.text_color,
-                set: (value) => window.elementSdk.setConfig({ text_color: value })
+                get: () => cfg.text_color || defaultConfig.text_color,
+                set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
               },
               {
-                get: () => config.primary_color || defaultConfig.primary_color,
-                set: (value) => window.elementSdk.setConfig({ primary_color: value })
+                get: () => cfg.primary_action_color || defaultConfig.primary_action_color,
+                set: (v) => { cfg.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); }
               },
               {
-                get: () => config.accent_color || defaultConfig.accent_color,
-                set: (value) => window.elementSdk.setConfig({ accent_color: value })
+                get: () => cfg.secondary_action_color || defaultConfig.secondary_action_color,
+                set: (v) => { cfg.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); }
               }
             ],
             borderables: [],
-            fontEditable: undefined,
-            fontSizeable: undefined
+            fontEditable: {
+              get: () => cfg.font_family || defaultConfig.font_family,
+              set: (v) => { cfg.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+            },
+            fontSizeable: {
+              get: () => cfg.font_size || defaultConfig.font_size,
+              set: (v) => { cfg.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+            }
           }),
-          mapToEditPanelValues: (config) => new Map([
-            ['dashboard_title', config.dashboard_title || defaultConfig.dashboard_title],
-            ['district_name', config.district_name || defaultConfig.district_name]
+          mapToEditPanelValues: (cfg) => new Map([
+            ['dashboard_title', cfg.dashboard_title || defaultConfig.dashboard_title],
+            ['district_name', cfg.district_name || defaultConfig.district_name]
           ])
         });
       }
-
+      
       // Initialize Data SDK
       if (window.dataSdk) {
         const result = await window.dataSdk.init(dataHandler);
         if (!result.isOk) {
-          console.error('Failed to initialize Data SDK');
+          console.error('Failed to initialize Data SDK:', result.error);
         }
       }
     }
 
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d261f7656ab2e59',t:'MTc3MTg0MzQxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d26516a42803b04',t:'MTc3MTg0NTQ2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
